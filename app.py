@@ -4,7 +4,8 @@ import pandas as pd
 from data_preprocessing import preprocess_retail_data
 from rfm import calculate_rfm
 from clustering import cluster_rfm
-# from visualization import plot_cluster_means  # 使う場合
+from report_generator import generate_llm_report
+from google import genai
 
 st.title("Customer Segmentation DSS")
 st.write("CSVをアップロードするだけでRFM分析＋クラスタリングを実行します。")
@@ -38,5 +39,23 @@ if uploaded_file:
     st.subheader("⑤ クラスタ別平均")
     cluster_means = rfm_clustered.groupby("Cluster").mean()
     st.dataframe(cluster_means)
+
+    # LLMレポート生成
+    st.subheader("⑥ 自動レポート生成（LLM）")
+
+    # APIキーの入力（本番はst.secrets推奨）
+    api_key = "AIzaSyDLccPtlWzl56CTV1Cab5vBCHna6_otyLw"
+
+    if api_key:
+        if st.button("レポートを生成する"):
+            with st.spinner("レポート生成中..."):
+                try:
+                    report_text = generate_llm_report(cluster_means)
+                    st.markdown("### 📄 生成されたレポート")
+                    st.write(report_text)
+                except Exception as e:
+                    st.error(f"レポート生成中にエラーが発生しました: {e}")
+    else:
+        st.info("LLMレポートを使うには、APIキーを入力してください。")
 
     st.success("分析が完了しました！")
