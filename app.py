@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
+import os
 
 from data_preprocessing import preprocess_retail_data
 from rfm import calculate_rfm
 from clustering import cluster_rfm
 from report_generator import generate_llm_report
-from google import genai
 
 st.title("Customer Segmentation DSS")
 st.write("CSVをアップロードするだけでRFM分析＋クラスタリングを実行します。")
@@ -43,19 +43,16 @@ if uploaded_file:
     # LLMレポート生成
     st.subheader("⑥ 自動レポート生成（LLM）")
 
-    # APIキーの入力（本番はst.secrets推奨）
-    api_key = "AIzaSyDLccPtlWzl56CTV1Cab5vBCHna6_otyLw"
-
-    if api_key:
-        if st.button("レポートを生成する"):
-            with st.spinner("レポート生成中..."):
-                try:
-                    report_text = generate_llm_report(cluster_means)
-                    st.markdown("### 📄 生成されたレポート")
-                    st.write(report_text)
-                except Exception as e:
-                    st.error(f"レポート生成中にエラーが発生しました: {e}")
-    else:
-        st.info("LLMレポートを使うには、APIキーを入力してください。")
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        st.info("LLMレポートを使うには、環境変数 GEMINI_API_KEY を設定してください（.env に記載して実行）。")
+    elif st.button("レポートを生成する"):
+        with st.spinner("レポート生成中..."):
+            try:
+                report_text = generate_llm_report(cluster_means)
+                st.markdown("### 📄 生成されたレポート")
+                st.write(report_text)
+            except Exception as e:
+                st.error(f"レポート生成中にエラーが発生しました: {e}")
 
     st.success("分析が完了しました！")

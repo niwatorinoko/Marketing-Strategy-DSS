@@ -28,6 +28,14 @@ docker compose up
 ```
 ブラウザで `http://localhost:8501` にアクセスしてください。コードを編集するとコンテナ内にも反映されるよう、リポジトリ全体をコンテナにマウントしています。
 
+### LLM用APIキーの設定
+GeminiのAPIキーを `.env` に設定してから起動してください。
+1. `.env.example` をコピーして `.env` を作成し、`GEMINI_API_KEY` を自身のキーに置き換える。
+   ```bash
+   cp .env.example .env
+   ```
+2. ローカル実行の場合はシェルで環境変数をセットした状態で `streamlit run app.py` を実行しても構いません。
+
 ## 入力データ要件
 - 必須列: `CustomerID`（または `Customer ID`）、`InvoiceNo`（または `Invoice`）、`InvoiceDate`、`Quantity`、`Price`
 - `InvoiceDate` は日時形式に変換可能であること

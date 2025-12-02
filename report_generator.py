@@ -1,5 +1,6 @@
 import textwrap
 import pandas as pd
+import os
 from google import genai
 
 def build_report_prompt(cluster_means: pd.DataFrame) -> str:
@@ -45,7 +46,9 @@ def generate_llm_report(cluster_means: pd.DataFrame, model_name: str = "gpt-4o-m
     """
     prompt = build_report_prompt(cluster_means)
 
-    api_key = "AIzaSyDLccPtlWzl56CTV1Cab5vBCHna6_otyLw"
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("環境変数 GEMINI_API_KEY が設定されていません。")
 
     client = genai.Client(api_key=api_key)
 
