@@ -118,3 +118,9 @@ def run_forecast_tab():
     st.session_state["product_ready"] = True 
 
     st.success("全ての分析とサマリーの作成が完了しました。左側のレポート生成設定で、この結果を選択できます。")
+    st.session_state["forecast_done"] = True
+
+    # 消さないで！！
+    if not st.session_state.get("rerun_triggered", False):
+        st.session_state["rerun_triggered"] = True
+        st.rerun()
