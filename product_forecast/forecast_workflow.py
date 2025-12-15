@@ -4,12 +4,12 @@ import numpy as np
 
 def simulate_product_forecast(product_summary: pd.DataFrame) -> pd.DataFrame:
     """
-    集計結果に基づき、販売予測の精度指標をダミーで追加するシミュレーション関数。
-    実際には機械学習モデルを組み込みます。
+    Adds dummy metrics for sales forecast accuracy based on the aggregated results.
+    A machine learning model would be integrated here in a real application.
     """
     
-    # 精度指標をダミーで生成
-    # 簡易的に販売件数が多いほど（おそらく重要な商品ほど）精度が高いと仮定
+    # Generate dummy accuracy metrics
+    # Assume higher accuracy for products with more sales (likely more important products)
     
     def get_dummy_metrics(count):
         # MAE (Mean Absolute Error), RMSE (Root Mean Square Error), R² (R-squared)
@@ -20,7 +20,7 @@ def simulate_product_forecast(product_summary: pd.DataFrame) -> pd.DataFrame:
         else:
             return 35.0, 50.0, 0.65
             
-    # 新しい列を計算して追加
+    # Calculate and add new columns
     metrics = product_summary['SalesCount'].apply(
         lambda x: pd.Series(get_dummy_metrics(x))
     )
@@ -31,96 +31,96 @@ def simulate_product_forecast(product_summary: pd.DataFrame) -> pd.DataFrame:
     return forecast_summary.sort_values(by='SalesCount', ascending=False)
 
 def run_forecast_tab():
-    st.header("📦 商品販売予測（試験実装）")
-    st.write("日時と商品名（＋数量）のデータから販売傾向を簡易的に分析し、レポート用サマリーを作成します。")
+    st.header("📦 Product Sales Forecasting (Trial Implementation)")
+    st.write("Performs simple sales trend analysis from data including date and product name (+ quantity), and creates a summary for reporting.")
 
-    uploaded_file = st.file_uploader("販売データCSVをアップロード", type="csv", key="forecast")
+    uploaded_file = st.file_uploader("Upload Sales Data CSV", type="csv", key="forecast")
 
     if not uploaded_file:
-        # ファイルがない場合はセッションステートをクリア
+        # Clear session state if no file is present
         st.session_state.pop("product_summary", None)
         st.session_state["product_ready"] = False
         return
     try:
-        uploaded_file.seek(0) # 念のためポインタをリセット
+        uploaded_file.seek(0) # Reset pointer just in case
         df = pd.read_csv(uploaded_file, encoding='utf_8_sig') 
-        st.success(f"ファイル `{uploaded_file.name}` の読み込みが完了しました (UTF-8 SIG)。")
+        st.success(f"File `{uploaded_file.name}` loaded successfully (UTF-8 SIG).")
     
     except UnicodeDecodeError:
-        # 2. 失敗したらShift-JISで再試行
+        # 2. Retry with Shift-JIS on failure
         try:
             uploaded_file.seek(0)
             df = pd.read_csv(uploaded_file, encoding='shift_jis')
-            st.warning("⚠️ ファイルがShift-JISとして読み込まれました。")
+            st.warning("⚠️ File was loaded as Shift-JIS.")
         except Exception as e_sjis:
-            # 3. それでも失敗したら、エラーを無視してShift-JISで読み込み（最終手段）
+            # 3. Last resort: Load with Shift-JIS, ignoring errors
             try:
                 uploaded_file.seek(0)
                 df = pd.read_csv(uploaded_file, encoding='shift_jis', errors='ignore')
-                st.error("🚨 致命的なエンコーディングエラー。不正な文字を無視して読み込みました。データを確認してください。")
+                st.error("🚨 Critical encoding error. Loaded by ignoring invalid characters. Please check your data.")
             except Exception as e_ignore:
-                st.error(f"ファイルの読み込みに失敗しました。エンコーディングを確認してください: {e_ignore}")
+                st.error(f"Failed to load file. Please check encoding: {e_ignore}")
                 st.session_state.pop("product_summary", None)
                 st.session_state["product_ready"] = False
                 return
     
     except Exception as e:
-        # その他の一般的な読み込みエラー
-        st.error(f"ファイルの読み込み中に予期せぬエラーが発生しました: {e}")
+        # Other general loading errors
+        st.error(f"An unexpected error occurred while loading the file: {e}")
         st.session_state.pop("product_summary", None)
         st.session_state["product_ready"] = False
         return
     
-    # --- ファイルアップロード後の処理 ---
+    # --- Processing after file upload ---
     
-    st.subheader("① アップロードしたデータ")
+    st.subheader("① Uploaded Data")
     st.dataframe(df.head())
 
-    # 日付形式変換
+    # Date format conversion
     if "Date" in df.columns:
         df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-        # 日付が欠損している場合は警告
+        # Warning if dates are missing
         if df["Date"].isna().sum() > 0:
-            st.warning("⚠️ 一部のDate列に無効な日付があります。")
+            st.warning("⚠️ Some dates in the 'Date' column are invalid.")
 
-    # 集計例：商品ごとの売上件数
-    st.subheader("② 商品別の販売集計（簡易）")
+    # Aggregation example: Sales count per product
+    st.subheader("② Product Sales Aggregation (Simple)")
     if "Product" not in df.columns:
-        st.error("❌ 'Product' 列が存在しません。CSVのカラム名を確認してください。")
+        st.error("❌ The 'Product' column does not exist. Please check the column names in your CSV.")
         st.session_state.pop("product_summary", None)
         st.session_state["product_ready"] = False
         return
         
-    # 商品別集計を実行
+    # Perform product aggregation
     product_summary = df.groupby("Product").size().reset_index(name="SalesCount")
     st.dataframe(product_summary.sort_values("SalesCount", ascending=False))
 
-    # 日別トレンド（任意）
+    # Daily trend (optional)
     if "Date" in df.columns:
-        st.subheader("③ 日別販売数の推移")
+        st.subheader("③ Daily Sales Trend")
         daily_sales = df.groupby("Date").size().reset_index(name="SalesCount")
         st.line_chart(daily_sales.set_index("Date")["SalesCount"])
         
-    st.success("簡易的な販売分析が完了しました。レポート用サマリーを作成します。")
+    st.success("Simple sales analysis completed. Creating summary for report.")
     
-    # 1. 予測シミュレーションの実行 (即時実行)
+    # 1. Execute Forecast Simulation (immediate execution)
     forecast_summary_df = simulate_product_forecast(product_summary)
 
-    # 2. 結果の表示
-    st.subheader("④ 予測サマリー（レポート連携用）")
-    st.info("販売件数に基づき、予測精度指標をシミュレーションしています。")
+    # 2. Display Results
+    st.subheader("④ Forecast Summary (For Report Integration)")
+    st.info("Forecast accuracy metrics are simulated based on sales count.")
     st.dataframe(forecast_summary_df)
         
-    # 3. レポート連携のためにセッションステートに保存
+    # 3. Save to session state for report integration
     st.session_state["product_summary"] = forecast_summary_df
         
-    # レポート生成のチェックボックスを有効化するためのフラグを立てる
+    # Set flag to enable report generation checkbox
     st.session_state["product_ready"] = True 
 
-    st.success("全ての分析とサマリーの作成が完了しました。左側のレポート生成設定で、この結果を選択できます。")
+    st.success("All analysis and summary creation are complete. You can select this result in the Report Generation Settings on the left.")
     st.session_state["forecast_done"] = True
 
-    # 消さないで！！
+    # Keep this line!
     if not st.session_state.get("rerun_triggered", False):
         st.session_state["rerun_triggered"] = True
         st.rerun()
