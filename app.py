@@ -19,14 +19,14 @@ product_ready = st.session_state.get("forecast_done", False)
 
 # チェックボックス
 use_customer = st.sidebar.checkbox(
-    "顧客セグメンテーション結果を使用",
+    "Use Customer Segmentation Results",
     value=st.session_state.get("use_customer", False),
     disabled=not customer_ready,
     key="use_customer"
 )
 
 use_product = st.sidebar.checkbox(
-    "商品販売予測結果を使用",
+    "Use Product Sales Forecast Results",
     value=st.session_state.get("use_product", False),
     disabled=not product_ready,
     key="use_product"
@@ -35,7 +35,7 @@ use_product = st.sidebar.checkbox(
 # レポート生成ボタン
 if st.sidebar.button("Generate Report"):
     if not use_customer and not use_product:
-        st.sidebar.warning("少なくとも1つ選択してください。")
+        st.sidebar.warning("Please select at least one result to include.")
     else:
         # データ準備
         data_summary = {}
@@ -75,7 +75,7 @@ if st.sidebar.button("Generate Report"):
         except Exception as e:
             st.error(str(e))
 
-tab1, tab2 = st.tabs(["🧍‍♂️ 顧客セグメンテーション", "📦 商品販売予測"])
+tab1, tab2 = st.tabs(["🧍‍♂️ Customer Segmentation", "📦 Product Sales Forecasting"])
 
 # ============================================================
 # タブ①：顧客セグメンテーション
@@ -85,7 +85,7 @@ with tab1:
     try:
         run_segmentation_tab()
     except Exception as e:
-        st.error(f"顧客分析中にエラーが発生しました: {e}")
+        st.error(f"An error occurred during customer analysis: {e}")
 
 # ============================================================
 # タブ②：商品販売予測
@@ -95,5 +95,4 @@ with tab2:
     try:
         run_forecast_tab()
     except Exception as e:
-        st.error(f"商品販売予測中にエラーが発生しました: {e}")
-
+        st.error(f"An error occurred during product sales forecasting: {e}")
